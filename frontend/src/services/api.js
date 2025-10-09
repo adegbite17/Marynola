@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = 'http://localhost:5000';
 
 class ApiService {
   static async request(endpoint, options = {}) {
@@ -258,6 +258,7 @@ class ApiService {
     return this.request(`/api/staff/${id}`, options);
   }
 
+  // NEW SEARCH AND DOWNLOAD METHODS - PROPERLY FORMATTED
   static async searchStaff(query, employmentStatus = '') {
     const params = new URLSearchParams();
     if (query) params.append('q', query);

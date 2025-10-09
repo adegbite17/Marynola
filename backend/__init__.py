@@ -1,49 +1,53 @@
 import os
+import bcrypt
 from flask import Flask
+from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+from flask_login import LoginManager
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from datetime import timedelta
+from dotenv import load_dotenv
+
 
 db = SQLAlchemy()
-
+bcrypt = Bcrypt()
+login_manager = LoginManager()
+jwt = JWTManager()
+mail = Mail()
+load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app, origins=[
-        "http://localhost:3000",  # Local development
-        "https://company-frontend.onrender.com",  # Render frontend
-        "https://your-app.vercel.app"  # Vercel frontend (if using)
-    ])
-
-    # Database configuration
-    database_url = os.environ.get('DATABASE_URL')
+    database_url = os.getenv('DATABASE_URL')
     if database_url:
-        if database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql://', 1)
-        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost:5432/marynola'
-
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///marynola.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['JWT_SECRET_KEY'] = '2jrzuKHh4telYs3M'
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 
-    # File upload configuration
-    if os.environ.get('RENDER'):
-        # On Render - use persistent disk
-        app.config['UPLOAD_FOLDER'] = '/opt/render/project/src/uploads'
-    else:
-        # Local development
-        app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'uploads')
-
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
-
-    # Ensure upload directory exists
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    # Email configuration
+    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+    app.config['MAIL_PORT'] = os.getenv('MAIL_PORT')
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')
 
     db.init_app(app)
-    jwt = JWTManager(app)
+    bcrypt.init_app(app)
+    login_manager.init_app(app)
+    jwt.init_app(app)
+    mail.init_app(app)
+    CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
 
-    from backend.routes import main
+    # Register blueprints - THIS IS WHAT'S MISSING!
+    from .routes import main
     app.register_blueprint(main)
 
     return app
