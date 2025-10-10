@@ -9,8 +9,7 @@ app = create_app()
 app.config['DEBUG'] = False
 app.config['UPLOAD_FOLDER'] = "/tmp/uploads"  # os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-app.static_folder = "static"
-app.static_url_path = ""
+
 
 # Create upload directory if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
