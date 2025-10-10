@@ -1,6 +1,4 @@
-const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://your-app-name.up.railway.app/api'  // You'll get this URL after deployment
-  : 'http://127.0.0.1:5000/';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://marynola-2.onrender.com';
 
 
 class ApiService {
