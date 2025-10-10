@@ -113,34 +113,40 @@ def logout():
 @main.route('/api/staff', methods=['POST'])
 @jwt_required()
 def add_staff():
-    """Add new staff member with optional file upload"""
-    boss_id = int(get_jwt_identity())
+    try:
+        boss_id = int(get_jwt_identity())
 
-    # Check if request contains files (form-data) or JSON
-    if request.content_type and 'multipart/form-data' in request.content_type:
-        # Handle form-data with file upload
-        data = request.form.to_dict()
-        file = request.files.get('proof_of_id')
+        print("=== COMPLETE DEBUG INFO ===")
+        print("Request method:", request.method)
+        print("Content-Type:", request.content_type)
+        print("Request headers:", dict(request.headers))
 
-        # Validate input data
-        validation_errors = ValidationService.validate_staff_data(data)
-        if validation_errors:
-            return jsonify({'errors': validation_errors}), 400
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            data = dict(request.form)
+            file = request.files.get('proof_of_id')
+            print("FormData received:")
+            for key, value in data.items():
+                print(f"  {key}: '{value}' (type: {type(value)}, length: {len(str(value)) if value else 0})")
+            print("File:", file.filename if file else "No file")
+        else:
+            data = request.get_json()
+            print("JSON data received:")
+            for key, value in data.items():
+                print(f"  {key}: '{value}' (type: {type(value)}, length: {len(str(value)) if value else 0})")
+            file = None
 
-        # Add staff with file
-        result, status = StaffService.add_staff_with_file(boss_id, data, file)
-        return jsonify(result), status
-    else:
-        # Handle JSON data (existing method)
-        data = request.get_json()
+        print("Boss ID:", boss_id)
+        print("========================")
 
-        # Validate input data
-        validation_errors = ValidationService.validate_staff_data(data)
-        if validation_errors:
-            return jsonify({'errors': validation_errors}), 400
+        result, status_code = StaffService.add_staff_with_file(boss_id, data, file)
+        return jsonify(result), status_code
 
-        result, status = StaffService.add_staff(boss_id, data)
-        return jsonify(result), status
+    except Exception as e:
+        print(f"Route exception: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
 
 
 @main.route('/api/staff', methods=['GET'])

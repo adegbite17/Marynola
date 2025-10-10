@@ -10,13 +10,13 @@ from flask_jwt_extended import JWTManager
 from datetime import timedelta
 from dotenv import load_dotenv
 
-
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 login_manager = LoginManager()
 jwt = JWTManager()
 mail = Mail()
 load_dotenv()
+
 
 def create_app():
     app = Flask(__name__)

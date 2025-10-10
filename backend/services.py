@@ -9,6 +9,7 @@ import traceback
 import pandas as pd
 from io import BytesIO
 
+
 class BossService:
     @staticmethod
     def register_boss(email, password, company_name, firstname, lastname):
@@ -68,7 +69,6 @@ class BossService:
             print(f"Error in request_password_reset: {e}")
             traceback.print_exc()
             return {'error': f'Failed to send reset email: {str(e)}'}, 500
-
 
     @staticmethod
     def reset_password(email, code, new_password):
@@ -581,14 +581,13 @@ class ValidationService:
         required_fields = [
             'firstname', 'lastname', 'national_insurance_number',
             'home_address', 'telephone_number', 'employment_status',
-            'immigration_status','visa_type', 'visa_sharecode', 'sex', 'date_of_birth'
+            'immigration_status', 'visa_type', 'visa_sharecode', 'sex', 'date_of_birth'
         ]
 
         errors = []
         for field in required_fields:
             if field not in data or not data[field]:
                 errors.append(f'{field} is required')
-
 
         # Validate specific fields
         if 'sex' in data and data['sex'] not in ['Male', 'Female', 'Other']:
