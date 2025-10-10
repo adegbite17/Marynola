@@ -44,5 +44,5 @@ EXPOSE 5000
 # Set environment to production
 ENV FLASK_ENV=production
 
-# Start command
-CMD ["python", "run.py"]
+# Use Gunicorn for production
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "run:app"]
