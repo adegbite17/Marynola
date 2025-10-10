@@ -7,7 +7,7 @@ app = create_app()
 
 # Configuration
 app.config['DEBUG'] = False
-app.config['UPLOAD_FOLDER'] = "/tmp/uploads"              #os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+app.config['UPLOAD_FOLDER'] = "/tmp/uploads"  # os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.static_folder = "static"
 app.static_url_path = ""
@@ -28,19 +28,19 @@ def serve_static_files(path):
     if path.startswith('api/'):
         return None
 
-    # Serve static files from React build
-     if os.path.exists(os.path.join('frontend/build', path)):
-         return send_from_directory('frontend/build', path)
+        # Serve static files from React build
+    if os.path.exists(os.path.join('frontend/build', path)):
+        return send_from_directory('frontend/build', path)
 
-    # Fallback for React routing - serve index.html
-     return send_from_directory('frontend/build', 'index.html')
+        # Fallback for React routing - serve index.html
+    return send_from_directory('frontend/build', 'index.html')
 
 
 # Initialize database tables
 with app.app_context():
     try:
         # Drop all tables and recreate them with proper relationships
-        #db.drop_all()
+        # db.drop_all()
         db.create_all()
         print("Database tables recreated successfully with proper relationships!")
     except Exception as e:
