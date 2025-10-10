@@ -1,16 +1,23 @@
 # Use Python base image
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install Node.js
+# Install system dependencies including build tools
 RUN apt-get update && apt-get install -y \
     curl \
+    build-essential \
+    gcc \
+    g++ \
+    python3-dev \
     && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip first
+RUN pip install --upgrade pip
 
 # Copy package files first for better caching
 COPY requirements.txt .
