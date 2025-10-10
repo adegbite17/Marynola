@@ -16,18 +16,25 @@ app.static_url_path = ""
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
+# Serve React frontend
+@app.route('/')
+def serve_frontend():
+    return send_from_directory('frontend/build', 'index.html')
+
+
 @app.route('/<path:path>')
 def serve_static_files(path):
     # Skip API routes
     if path.startswith('api/'):
         return None
 
-    # Serve static files
-    if os.path.exists(os.path.join('static', path)):
-        return send_from_directory('static', path)
+    # Serve static files from React build
+     if os.path.exists(os.path.join('frontend/build', path)):
+         return send_from_directory('frontend/build', path)
 
-    # Fallback for React routing
-    return send_file('static/index.html')
+    # Fallback for React routing - serve index.html
+     return send_from_directory('frontend/build', 'index.html')
+
 
 # Initialize database tables
 with app.app_context():
