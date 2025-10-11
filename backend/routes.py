@@ -5,6 +5,10 @@ from datetime import datetime, timedelta
 
 from .services import BossService, StaffService, FileService, ValidationService
 from .models import Boss
+from flask_jwt_extended import verify_jwt_in_request
+import requests
+from flask import Response
+from flask_jwt_extended import decode_token
 
 # Create blueprint
 main = Blueprint('main', __name__)
@@ -232,10 +236,11 @@ def delete_staff(staff_id):
 # File Upload Routes for ID Documents
 @main.route('/api/staff/<int:staff_id>/upload-id', methods=['POST'])
 @jwt_required()
+# In your routes.py - the upload route should keep JWT authentication
 def upload_staff_id(staff_id):
     """Upload proof of ID for existing staff member"""
     try:
-        boss_id = int(get_jwt_identity())  # This is the boss ID, not email
+        boss_id = int(get_jwt_identity())  # ✅ Keep this authentication
 
         # Get boss by ID, not email
         boss = Boss.query.get(boss_id)
@@ -246,6 +251,7 @@ def upload_staff_id(staff_id):
             return jsonify({'error': 'No file provided'}), 400
 
         file = request.files['proof_of_id']
+        # This will now use Cloudinary instead of local storage
         result, status = FileService.upload_proof_of_id(file, staff_id, boss.id)
         return jsonify(result), status
 
@@ -255,21 +261,119 @@ def upload_staff_id(staff_id):
 
 
 @main.route('/api/staff/<int:staff_id>/download-id', methods=['GET'])
-@jwt_required()
 def download_proof_of_id(staff_id):
-    """Download proof of ID document"""
-    boss_id = int(get_jwt_identity())
+    """Download proof of ID file - handles JSON responses from Cloudinary"""
+    try:
+        # Try to get token from query parameter first
+        token = request.args.get('token')
 
-    # Verify staff belongs to this boss
-    staff = StaffService.get_staff_by_id(staff_id, boss_id)
-    if not staff or not staff.get('proof_of_id'):
-        return jsonify({'error': 'File not found'}), 404
+        if token:
+            try:
+                decoded_token = decode_token(token)
+                boss_id = int(decoded_token['sub'])
+            except Exception as e:
+                print(f"Token decode error: {e}")
+                return jsonify({'error': 'Invalid token'}), 401
+        else:
+            try:
+                verify_jwt_in_request()
+                boss_id = int(get_jwt_identity())
+            except:
+                return jsonify({'error': 'Authentication required'}), 401
 
-    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], staff['proof_of_id'])
-    if os.path.exists(file_path):
-        return send_file(file_path, as_attachment=True)
+        staff = StaffService.get_staff_by_id(staff_id, boss_id)
+        if not staff or not staff.get('proof_of_id'):
+            return jsonify({'error': 'File not found'}), 404
 
-    return jsonify({'error': 'File not found on server'}), 404
+        file_url = staff['proof_of_id']
+        print(f"Original URL from database: {file_url}")
+
+        if file_url.startswith('http'):
+            try:
+                print(f"Fetching from: {file_url}")
+                response = requests.get(file_url, timeout=30)
+                response.raise_for_status()
+
+                content_type = response.headers.get('Content-Type', '').lower()
+                print(f"Response content type: {content_type}")
+
+                # Check if response is JSON
+                if 'application/json' in content_type:
+                    try:
+                        json_data = response.json()
+                        print(f"JSON response received: {json_data}")
+
+                        # Extract actual image URL from JSON
+                        actual_image_url = None
+
+                        # Common JSON structures from Cloudinary:
+                        if 'secure_url' in json_data:
+                            actual_image_url = json_data['secure_url']
+                        elif 'url' in json_data:
+                            actual_image_url = json_data['url']
+                        elif 'public_id' in json_data and 'version' in json_data:
+                            # Reconstruct Cloudinary URL
+                            cloud_name = 'dwghubkst'  # Replace with your actual cloud name
+                            actual_image_url = f"https://res.cloudinary.com/{cloud_name}/image/upload/v{json_data['version']}/{json_data['public_id']}.{json_data.get('format', 'jpg')}"
+
+                        if actual_image_url:
+                            print(f"Extracted image URL: {actual_image_url}")
+                            # Now fetch the actual image
+                            image_response = requests.get(actual_image_url, timeout=30)
+                            image_response.raise_for_status()
+
+                            # Get file extension
+                            file_ext = actual_image_url.split('.')[-1].split('?')[0]
+                            filename = f"{staff.get('firstname', 'staff')}_{staff.get('lastname', staff_id)}_proof.{file_ext}"
+
+                            return Response(
+                                image_response.content,
+                                headers={
+                                    'Content-Disposition': f'attachment; filename="{filename}"',
+                                    'Content-Type': image_response.headers.get('Content-Type', 'image/jpeg')
+                                }
+                            )
+                        else:
+                            return jsonify({'error': 'Could not extract image URL from JSON response'}), 400
+
+                    except Exception as json_error:
+                        print(f"Error parsing JSON: {json_error}")
+                        return jsonify({'error': 'Invalid JSON response from image service'}), 400
+
+                else:
+                    # Response is already an image, serve it directly
+                    if '.' in file_url.split('/')[-1]:
+                        file_ext = file_url.split('.')[-1].split('?')[0]
+                    else:
+                        # Guess extension from content type
+                        if 'image/jpeg' in content_type:
+                            file_ext = 'jpg'
+                        elif 'image/png' in content_type:
+                            file_ext = 'png'
+                        elif 'image/gif' in content_type:
+                            file_ext = 'gif'
+                        else:
+                            file_ext = 'file'
+
+                    filename = f"{staff.get('firstname', 'staff')}_{staff.get('lastname', staff_id)}_proof.{file_ext}"
+
+                    return Response(
+                        response.content,
+                        headers={
+                            'Content-Disposition': f'attachment; filename="{filename}"',
+                            'Content-Type': response.headers.get('Content-Type', 'application/octet-stream')
+                        }
+                    )
+
+            except requests.RequestException as e:
+                print(f"Failed to fetch file: {e}")
+                return jsonify({'error': f'Failed to fetch file: {str(e)}'}), 500
+
+        return jsonify({'error': 'Invalid file URL'}), 404
+
+    except Exception as e:
+        print(f"Download error: {e}")
+        return jsonify({'error': 'Failed to download file'}), 500
 
 
 # Dashboard/Analytics Routes
@@ -333,34 +437,32 @@ def search_staff():
 @main.route('/api/staff/download', methods=['GET'])
 @jwt_required()
 def download_staff_excel():
-    """Download staff data as Excel file"""
     try:
-        boss_id = int(get_jwt_identity())
+        boss_id = get_jwt_identity()
         print(f"Download request for boss ID: {boss_id}")
 
-        # Get all staff for this boss using the export method
-        staff_list = StaffService.get_staff_by_boss_for_export(boss_id)
-        print(f"Found {len(staff_list)} staff members for download")
+        # Get staff data using StaffService
+        staff_list = StaffService.get_staff_by_boss(boss_id)
 
         if not staff_list:
-            return jsonify({'error': 'No staff data to download'}), 404
+            return jsonify({'error': 'No staff found'}), 404
 
-        # Create Excel file
-        excel_file = FileService.create_staff_excel(staff_list)
-        print("Excel file created successfully")
+        # Create Excel file using FileService
+        excel_buffer = FileService.create_staff_excel(staff_list)
 
+        from flask import send_file
         return send_file(
-            excel_file,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            excel_buffer,
             as_attachment=True,
-            download_name=f'staff_list_{boss_id}.xlsx'
+            download_name=f'staff_list_{boss_id}.xlsx',
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
 
     except Exception as e:
-        print(f"Download error: {str(e)}")
+        print(f"Download error: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'Failed to generate Excel file'}), 500
 
 
 # Error Handlers

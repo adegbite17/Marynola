@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://marynola-2.onrender.com';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 
 class ApiService {
@@ -236,18 +236,18 @@ class ApiService {
     }
 
     static async downloadStaffId(id) {
-        const response = await fetch(`${API_BASE_URL}/api/staff/${id}/download-id`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
+        const token = localStorage.getItem('token');
 
-        if (!response.ok) {
-            throw new Error('Failed to download ID');
-        }
-
-        return response.blob();
+        // Create a temporary link and trigger download
+        const link = document.createElement('a');
+        link.href = `${API_BASE_URL}/api/staff/${id}/download-id?token=${token}`;
+        link.download = ''; // This forces download
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
+
 
     static async deleteStaff(id) {
         const options = {

@@ -9,6 +9,8 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
 from dotenv import load_dotenv
+import cloudinary
+import cloudinary.uploader
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -31,6 +33,12 @@ def create_app():
     app.config['JWT_SECRET_KEY'] = '2jrzuKHh4telYs3M'
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 
+    cloudinary.config(
+        cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+        api_key=os.getenv('CLOUDINARY_API_KEY'),
+        api_secret=os.getenv('CLOUDINARY_API_SECRET')
+    )
+
     # Email configuration
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
     app.config['MAIL_PORT'] = os.getenv('MAIL_PORT')
@@ -44,7 +52,7 @@ def create_app():
     login_manager.init_app(app)
     jwt.init_app(app)
     mail.init_app(app)
-    CORS(app, origins=["https://frontend-wheat-zeta-18.vercel.app"], supports_credentials=True)
+    CORS(app)
 
     # Register blueprints - THIS IS WHAT'S MISSING!
     from .routes import main
