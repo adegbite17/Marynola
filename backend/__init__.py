@@ -44,7 +44,7 @@ def create_app():
     login_manager.init_app(app)
     jwt.init_app(app)
     mail.init_app(app)
-    CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
+    CORS(app, origins=["https://frontend-wheat-zeta-18.vercel.app"], supports_credentials=True)
 
     # Register blueprints - THIS IS WHAT'S MISSING!
     from .routes import main
