@@ -47,14 +47,14 @@ class BossService:
         """Send password reset email"""
         boss = Boss.query.filter_by(email=email.lower()).first()
         if not boss:
-            # Don't reveal if email exists or not for security
+            # Don't reveal if email exists or not for security reason
             return {'message': 'If email exists, reset link has been sent'}, 200
 
         try:
-            # Generate the code - this will save to reset_token column
+            # Generates the code - this will save to reset_token column
             code = boss.generate_reset_token()
 
-            # Try to send email (optional since email is failing)
+            # Try to send email
             try:
                 EmailService.send_password_reset_email(boss)
             except Exception as email_error:
@@ -260,7 +260,7 @@ class StaffService:
                     except ValueError:
                         return {'error': 'Invalid date format. Use YYYY-MM-DD'}, 400
                 elif key == 'national_insurance_number' and value:
-                    # Check if NI number is being changed and if it already exists
+                    # Check if NIN number is being changed and if it already exists
                     if value.upper() != staff.national_insurance_number:
                         existing = Staff.query.filter_by(national_insurance_number=value.upper()).first()
                         if existing:
@@ -367,7 +367,7 @@ class StaffService:
             # Start with base query
             staff_query = Staff.query.filter_by(boss_id=boss_id)
 
-            # Add search conditions
+            # Adds search conditions
             if query:
                 search_term = f'%{query}%'
                 staff_query = staff_query.filter(
