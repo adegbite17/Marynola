@@ -1,6 +1,6 @@
 from backend import create_app, db
 import os
-# Create the Flask application instance
+
 app = create_app()
 
 # Configuration
