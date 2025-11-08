@@ -175,7 +175,7 @@ def update_staff(staff_id):
         if not boss:
             return jsonify({'error': 'Boss not found'}), 404
 
-        # Only handle JSON data for this route
+        # Only handle JSON data
         update_data = request.get_json()
         if not update_data:
             return jsonify({'error': 'No JSON data provided'}), 400
@@ -199,7 +199,7 @@ def update_staff_with_file(staff_id):
         if not boss:
             return jsonify({'error': 'Boss not found'}), 404
 
-        # Get form data (like in add_staff_with_file)
+        # Get form data
         update_data = request.form.to_dict()
         file = request.files.get('proof_of_id')
 
