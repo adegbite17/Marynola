@@ -4,7 +4,6 @@ gunicorn==23.0.0
 packaging==25.0
 pipenv==2025.0.4
 platformdirs==4.4.0
-psycopg2-binary==2.9.10
 PyJWT==2.10.1
 setuptools==80.9.0
 virtualenv==20.34.0
@@ -29,3 +28,4 @@ python-http-client==3.3.7
 sendgrid==6.12.5
 twilio==9.8.6
 yarl==1.22.0
+
