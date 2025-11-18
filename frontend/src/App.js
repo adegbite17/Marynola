@@ -8,7 +8,7 @@ import AddStaff from './components/auth/AddStaff';
 import EditStaff from './components/auth/EditStaff';
 import StaffList from "./components/staff/StaffList";
 
-// Protected Route Component
+// Protected Routes Component
 const ProtectedRoute = ({children}) => {
     const token = localStorage.getItem('token');
     return token ? children : <Navigate to="/login" replace/>;

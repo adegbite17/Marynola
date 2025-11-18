@@ -39,7 +39,7 @@ def create_app():
         api_secret=os.getenv('CLOUDINARY_API_SECRET')
     )
 
-    # Email configuration
+    #email configuration
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
     app.config['MAIL_PORT'] = os.getenv('MAIL_PORT')
     app.config['MAIL_USE_TLS'] = True
@@ -54,8 +54,8 @@ def create_app():
     mail.init_app(app)
     CORS(app)
 
-    # Register blueprints - THIS IS WHAT'S MISSING!
-    from .routes import main
+    #Register blueprints
+    from .boss import main
     app.register_blueprint(main)
 
     return app

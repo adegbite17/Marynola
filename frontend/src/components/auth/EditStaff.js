@@ -36,7 +36,6 @@ const EditStaff = () => {
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
 
-    // In your EditStaff component
     useEffect(() => {
         const fetchStaffData = async () => {
             try {
@@ -48,7 +47,7 @@ const EditStaff = () => {
 
                 const staffData = response.staff;
                 console.log('Extracted staff data:', staffData); // Add this for debugging
-                // Pre-populate your form fields with existing data
+                // Pre-populating fields with existing data
                 setFormData({
                     firstname: staffData.firstname || '',
                     lastname: staffData.lastname || '',
@@ -61,7 +60,7 @@ const EditStaff = () => {
                     date_of_birth: staffData.date_of_birth || '',
                     home_address: staffData.home_address || '',
                     national_insurance_number: staffData.national_insurance_number || '',
-                    // Don't pre-populate the file field
+                    // Exclude proof_of_id from pre-population
                     proof_of_id: staffData.proof_of_id || null
                 });
                 setError('');
@@ -88,16 +87,16 @@ const EditStaff = () => {
         setFormData({...formData, proof_of_id: e.target.files[0]});
     };
 
-    // In your form submission handler
+    // Form submission handler
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
-            // Check if a file is selected for upload
+            // Checks if a new file is selected for upload
             if (formData.proof_of_id && formData.proof_of_id instanceof File) {
-                // Use FormData for file upload
+                // FormData for file upload
                 const form = new FormData();
                 Object.keys(formData).forEach(key => {
                     if (formData[key] !== null && formData[key] !== undefined) {
@@ -106,15 +105,16 @@ const EditStaff = () => {
                 });
                 await ApiService.updateStaffWithFile(id, form);
             } else {
-                // Use regular update without file
+                // If No new file, send JSON with flag to keep existing ID
                 const {proof_of_id, ...staffDataWithoutFile} = formData;
+                staffDataWithoutFile.keep_existing_id = true;
                 await ApiService.updateStaff(id, staffDataWithoutFile);
             }
 
             navigate('/dashboard');
         } catch (error) {
             console.error('Update error:', error);
-            setError('Failed to update staff member.');
+            setError('Failed to update staff member, cross check the fields and try again.');
         } finally {
             setLoading(false);
         }

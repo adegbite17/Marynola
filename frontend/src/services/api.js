@@ -8,7 +8,7 @@ class ApiService {
             ...options,
         };
 
-        // Add auth token if available
+        // Adds auth token if available
         const token = localStorage.getItem('token');
         if (token) {
             config.headers = {
@@ -17,7 +17,7 @@ class ApiService {
             };
         }
 
-        // Only add Content-Type for non-FormData requests
+        // Adds content type for non formdata requests
         if (!(options.body instanceof FormData)) {
             config.headers = {
                 'Content-Type': 'application/json',
@@ -38,13 +38,13 @@ class ApiService {
                     errorMessage = `HTTP ${response.status}: ${response.statusText}`;
                 }
 
-                // Handle 401 differently for login vs authenticated routes
+                // This handles 401 differently for login vs authenticated routes
                 if (response.status === 401) {
-                    // Don't treat login failures as session expiration
+                    // This Doesn't treat login failures as session expiration
                     if (endpoint === '/api/login') {
                         throw new Error(errorMessage);
                     } else {
-                        // Only clear tokens for authenticated routes
+                        // Only clears tokens for authenticated routes
                         localStorage.removeItem('token');
                         localStorage.removeItem('user');
                         throw new Error('Session expired. Please login again.');
@@ -69,7 +69,7 @@ class ApiService {
         try {
             const response = await this.request('/api/staff');
 
-            // Handle various response formats
+            // Handles various response formats
             if (Array.isArray(response)) {
                 return response;
             } else if (response && Array.isArray(response.data)) {
@@ -168,20 +168,6 @@ class ApiService {
         return this.request('/api/staff', options);
     }
 
-    static async addStaffWithFile(staffData) {
-        const formData = new FormData();
-
-        Object.keys(staffData).forEach(key => {
-            if (staffData[key] !== null && staffData[key] !== undefined) {
-                formData.append(key, staffData[key]);
-            }
-        });
-
-        return this.request('/api/staff', {
-            method: 'POST',
-            body: formData,
-        });
-    }
 
     static async updateStaff(id, staffData) {
         const options = {
@@ -238,14 +224,27 @@ class ApiService {
     static async downloadStaffId(id) {
         const token = localStorage.getItem('token');
 
-        // Create a temporary link and trigger download
-        const link = document.createElement('a');
-        link.href = `${API_BASE_URL}/api/staff/${id}/download-id?token=${token}`;
-        link.download = ''; // This forces download
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const response = await fetch(`${API_BASE_URL}/api/staff/${id}/download-id`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to download ID proof');
+        }
+
+        // Returns the blob so the caller can validate and download
+        const blob = await response.blob();
+
+        // Verifies blob has content
+        if (!blob || blob.size === 0) {
+            throw new Error('No ID proof file received');
+        }
+
+        return blob;
     }
 
 
@@ -260,7 +259,7 @@ class ApiService {
         return this.request(`/api/staff/${id}`, options);
     }
 
-    // NEW SEARCH AND DOWNLOAD METHODS - PROPERLY FORMATTED
+    // search and download functions
     static async searchStaff(query, employmentStatus = '') {
         const params = new URLSearchParams();
         if (query) params.append('q', query);
@@ -304,15 +303,13 @@ class ApiService {
         document.body.removeChild(a);
     }
 
-    static async getUserProfile() {
-        return this.request('/api/profile');
-    }
 
-    static async updateProfile(profileData) {
-        return this.request('/api/profile', {
-            method: 'PUT',
-            body: JSON.stringify(profileData),
+    static async resetPasswordWithCode(email, code, password) {
+        return this.request('/api/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({email, reset_code: code, new_password: password}),
         });
+
     }
 }
 

@@ -55,7 +55,7 @@ const Dashboard = () => {
         loadDashboardData();
     }, [navigate]);
 
-    // Update filtered staff when staffList changes
+    // Updates filtered staff when staffList changes
     useEffect(() => {
         setFilteredStaff(staffList);
     }, [staffList]);
@@ -79,7 +79,7 @@ const Dashboard = () => {
                 const staffResponse = await ApiService.getStaffList();
                 console.log('Staff API response:', staffResponse);
 
-                // Handle different response formats
+                // Handles different response formats
                 if (Array.isArray(staffResponse)) {
                     staff = staffResponse;
                 } else if (staffResponse && Array.isArray(staffResponse.data)) {
@@ -121,7 +121,6 @@ const Dashboard = () => {
 
     const handleSearch = async () => {
         if (!searchQuery.trim() && !selectedEmploymentStatus) {
-            // If no search criteria, show all staff
             setFilteredStaff(staffList);
             return;
         }
@@ -133,13 +132,15 @@ const Dashboard = () => {
             setError('');
         } catch (error) {
             console.error('Search error:', error);
-            setError('Search failed. Please try again.');
-            // Fall back to local filtering if API search fails
+            // Remove the error message since we fall back to local search
+            // setError('Search failed. Please try again.');
             handleLocalSearch();
+            setError(''); // Clear error after successful local search
         } finally {
             setSearchLoading(false);
         }
     };
+
 
     const handleLocalSearch = () => {
         let filtered = [...staffList];
@@ -187,7 +188,7 @@ const Dashboard = () => {
             setDownloadLoading(staffId);
             const blob = await ApiService.downloadStaffId(staffId);
 
-            // Create download link
+            // Creates download link
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -261,7 +262,7 @@ const Dashboard = () => {
         );
     }
 
-    // Ensure staffList is always an array
+    // Ensures staffList is always an array
     const safeStaffList = Array.isArray(staffList) ? staffList : [];
     const safeFilteredStaff = Array.isArray(filteredStaff) ? filteredStaff : [];
 

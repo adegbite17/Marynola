@@ -27,7 +27,7 @@ const Login = () => {
             const data = await ApiService.login(formData);
             console.log('Login response:', data);
 
-            // Store authentication data
+            // Stores authentication data
             if (data.token || data.access_token) {
                 localStorage.setItem('token', data.token || data.access_token);
                 console.log('Token stored:', data.token || data.access_token);
@@ -60,7 +60,7 @@ const Login = () => {
     };
 
 
-    // Check if user is already logged in
+    // Checks if user is already logged in
     React.useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {

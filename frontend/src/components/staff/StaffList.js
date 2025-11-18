@@ -58,7 +58,12 @@ const StaffList = () => {
             setDownloadLoading(staffId);
             const blob = await ApiService.downloadStaffId(staffId);
 
-            // Create download link
+            // Verifies blob exists and has content
+            if (!blob || blob.size === 0) {
+                throw new Error('No ID proof file received');
+            }
+
+            // Creates download link
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -70,13 +75,18 @@ const StaffList = () => {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
+            // Clears any errors on success
+            setError('');
+
         } catch (error) {
             console.error('Download error:', error);
-            setError('Failed to download ID proof. Please try again.');
+            // Shows error if download actually failed
+            setError(error.message || 'Failed to download ID proof. Please try again.');
         } finally {
             setDownloadLoading(null);
         }
     };
+
 
     const handleDeleteClick = (staffId, staffName) => {
         setDeleteDialog({

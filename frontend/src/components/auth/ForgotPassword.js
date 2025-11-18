@@ -5,7 +5,7 @@ import ApiService from '../../services/api';
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
-    const [step, setStep] = useState(1); // 1: email, 2: code + new password
+    const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         email: '',
         code: '',
@@ -47,21 +47,28 @@ const ForgotPassword = () => {
         setLoading(true);
         setError('');
 
-        // Validate passwords match
+        // Validates passwords match
         if (formData.newPassword !== formData.confirmPassword) {
             setError('Passwords do not match');
             setLoading(false);
             return;
         }
 
-        // Validate password length
-        if (formData.newPassword.length < 6) {
-            setError('Password must be at least 6 characters long');
+        // Validates password length
+        if (formData.newPassword.length < 8) {
+            setError('Password must be at least 8 characters long');
             setLoading(false);
             return;
         }
 
-        // Validate code is provided
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+=\-[\]{};:'",.<>/?\\|`~])[A-Za-z\d@$!%*?&#^()_+=\-[\]{};:'",.<>/?\\|`~]{8,}$/;
+        if (!passwordRegex.test(formData.newPassword)) {
+            setError('Password must contain at least one uppercase letter, lowercase letter, number, and special character (@$!%*?&#, etc.)');
+            setLoading(false);
+            return;
+        }
+
+        // Validates code is provided
         if (!formData.code.trim()) {
             setError('Please enter the verification code');
             setLoading(false);
@@ -84,7 +91,7 @@ const ForgotPassword = () => {
             console.log('Reset password response:', response);
             setSuccess('Password reset successfully! Redirecting to login...');
 
-            // Clear form
+            // Clears form
             setFormData({
                 email: '',
                 code: '',
@@ -92,7 +99,7 @@ const ForgotPassword = () => {
                 confirmPassword: ''
             });
 
-            // Redirect to login after 3 seconds
+            // Redirects to login page after 3 seconds
             setTimeout(() => {
                 navigate('/login');
             }, 3000);
@@ -223,6 +230,7 @@ const ForgotPassword = () => {
                                 required
                                 disabled={loading}
                                 placeholder="Enter your new password (min 6 characters)"
+                                helperText="Must be 8+ characters with uppercase, lowercase, number, and special character"
                             />
                             <TextField
                                 fullWidth

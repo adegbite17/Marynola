@@ -49,11 +49,11 @@ const AddStaff = () => {
         setError('');
 
         try {
-            // If there's a file, we need to send FormData, not JSON
+            //If there's a file, we need to send FormData, not JSON
             if (formData.proof_of_id) {
                 const formDataToSend = new FormData();
 
-                // Append all form fields to FormData
+                //Appends all form fields to FormData
                 Object.keys(formData).forEach(key => {
                     if (key === 'proof_of_id') {
                         formDataToSend.append(key, formData[key]);
@@ -62,10 +62,10 @@ const AddStaff = () => {
                     }
                 });
 
-                // Call API with FormData (you'll need to modify ApiService.addStaff to handle this)
-                await ApiService.addStaff(formDataToSend, true); // Pass true flag for FormData
+                //Call api with FormData
+                await ApiService.addStaff(formDataToSend, true);
             } else {
-                // No file, send JSON as before (but remove proof_of_id field)
+                //No file, send JSON instead (but remove proof_of_id field)
                 const {proof_of_id, ...dataWithoutFile} = formData;
                 await ApiService.addStaff(dataWithoutFile);
             }
