@@ -1,29 +1,3 @@
-# Project Structure
-Marynola/
-├── backend/
-│   ├── __init__.py              # Flask app initialization, CORS, JWT, Mail config
-│   ├── boss.py                  # Main routes (auth, staff CRUD, dashboard)
-│   ├── models.py                # Database models (Boss, Staff)
-│   ├── services.py              # Business logic (StaffService, FileService)
-│   ├── boss_services_utils.py   # Boss-related utilities
-│   └── reset_password_utils.py  # Email service for password reset
-├── frontend/
-│   ├── public/
-│   │   └── index.html
-│   └── src/
-│       ├── App.js
-│       ├── index.js
-│       ├── components/
-│       │   ├── auth/            # Auth components (Login, Register, etc.)
-│       │   ├── dashboard/       # Dashboard component
-│       │   └── staff/           # Staff management components
-│       └── services/
-│           └── api.js           # API service layer
-├── run.py                       # Flask application entry point
-├── requirements.txt             # Python dependencies
-└── railway.toml                 # Railway deployment config
-
-
 # Clone the repository
 git clone https://github.com/adegbite17/Marynola.git
 cd Marynola/Marynola
