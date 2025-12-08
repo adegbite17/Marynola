@@ -229,7 +229,7 @@ const ForgotPassword = () => {
                                 onChange={handleChange}
                                 required
                                 disabled={loading}
-                                placeholder="Enter your new password (min 6 characters)"
+                                placeholder="Enter your new password (min 8 characters)"
                                 helperText="Must be 8+ characters with uppercase, lowercase, number, and special character"
                             />
                             <TextField
