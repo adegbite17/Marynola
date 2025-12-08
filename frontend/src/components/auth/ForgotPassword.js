@@ -127,7 +127,7 @@ const ForgotPassword = () => {
                 <Paper elevation={3} sx={{p: 4}}>
                     <Box sx={{textAlign: 'center', mb: 3}}>
                         <img
-                            src="/marynola.jpg"
+                            src="/placeholder.png"
                             alt="Marynola Logo"
                             style={{
                                 width: '100px',
